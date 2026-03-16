@@ -110,6 +110,13 @@
     "refresh": "更新",
     "temporarySpace": "一時スペース",
     "changeWorkspace": "ワークスペースを変更",
+    "workspaceSelector": {
+      "actionsTitle": "空のフォルダーから開始",
+      "openFolder": "新しいフォルダーを開く",
+      "recentTitle": "最近のワークスペース",
+      "searchPlaceholder": "ワークスペースを検索",
+      "empty": "一致するワークスペースがありません"
+    },
     "migration": {
       "title": "ワークスペースを変更",
       "currentWorkspaceLabel": "現在の一時ワークスペース：",

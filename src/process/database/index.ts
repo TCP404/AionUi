@@ -1363,7 +1363,16 @@ export class AionUIDatabase {
             INSERT INTO assistant_pairing_codes (code, plugin_id, platform_user_id, platform_type, display_name, requested_at, expires_at, status)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
           `);
-          stmtWithPluginId.run(request.code, pluginId, request.platformUserId, request.platformType, request.displayName ?? null, request.requestedAt, request.expiresAt, request.status);
+          stmtWithPluginId.run(
+            request.code,
+            pluginId,
+            request.platformUserId,
+            request.platformType,
+            request.displayName ?? null,
+            request.requestedAt,
+            request.expiresAt,
+            request.status
+          );
           return { success: true, data: request };
         } catch (fallbackError: any) {
           return { success: false, error: fallbackError.message };

@@ -23,7 +23,11 @@ export const useRecentWorkspaces = () => {
         pageSize: 10000,
       });
 
-      const normalizedConversations = Array.isArray(conversations) ? conversations.filter((conversation) => (conversation.extra as { isHealthCheck?: boolean } | undefined)?.isHealthCheck !== true) : [];
+      const normalizedConversations = Array.isArray(conversations)
+        ? conversations.filter(
+            (conversation) => (conversation.extra as { isHealthCheck?: boolean } | undefined)?.isHealthCheck !== true
+          )
+        : [];
 
       setWorkspaces(collectRecentWorkspaces(normalizedConversations as TChatConversation[], historyRecords));
     } catch (error) {

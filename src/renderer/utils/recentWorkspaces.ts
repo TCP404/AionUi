@@ -37,7 +37,11 @@ const resolveConversationWorkspace = (conversation: TChatConversation): string =
   return normalizedWorkspace;
 };
 
-const upsertWorkspace = (workspaceMap: Map<string, RecentWorkspaceItem>, workspacePath: string, updatedAt: number): void => {
+const upsertWorkspace = (
+  workspaceMap: Map<string, RecentWorkspaceItem>,
+  workspacePath: string,
+  updatedAt: number
+): void => {
   const normalizedWorkspace = normalizeWorkspacePath(workspacePath);
   if (!normalizedWorkspace || isTemporaryWorkspace(normalizedWorkspace)) {
     return;
@@ -54,7 +58,11 @@ const upsertWorkspace = (workspaceMap: Map<string, RecentWorkspaceItem>, workspa
   }
 };
 
-export const collectRecentWorkspaces = (conversations: TChatConversation[], historyRecords: WorkspaceHistoryRecord[] = [], currentWorkspace = ''): RecentWorkspaceItem[] => {
+export const collectRecentWorkspaces = (
+  conversations: TChatConversation[],
+  historyRecords: WorkspaceHistoryRecord[] = [],
+  currentWorkspace = ''
+): RecentWorkspaceItem[] => {
   const workspaceMap = new Map<string, RecentWorkspaceItem>();
 
   historyRecords.forEach(({ workspace, updatedAt }) => {

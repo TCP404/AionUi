@@ -31,15 +31,29 @@ test.describe('Channels', () => {
     await expect(workspaceButton).toBeVisible({ timeout: 8_000 });
     await workspaceButton.click();
 
-    const openFolderOption = page.locator(".arco-dropdown-menu-item:has-text('Open a new folder'), .arco-dropdown-menu-item:has-text('打开新文件夹')").first();
+    const openFolderOption = page
+      .locator(
+        ".arco-dropdown-menu-item:has-text('Open a new folder'), .arco-dropdown-menu-item:has-text('打开新文件夹')"
+      )
+      .first();
     await expect(openFolderOption).toBeVisible({ timeout: 8_000 });
 
-    const clearWorkspaceOption = page.locator(".arco-dropdown-menu-item:has-text('Clear workspace'), .arco-dropdown-menu-item:has-text('移除已选文件夹')").first();
+    const clearWorkspaceOption = page
+      .locator(
+        ".arco-dropdown-menu-item:has-text('Clear workspace'), .arco-dropdown-menu-item:has-text('移除已选文件夹')"
+      )
+      .first();
     const hasClearOption = (await clearWorkspaceOption.count()) > 0;
 
     if (hasClearOption) {
       await clearWorkspaceOption.click();
-      await expect(page.locator(".arco-message:has-text('Workspace cleared, using temporary workspace'), .arco-message:has-text('已清空工作区，将使用临时工作区')").first()).toBeVisible({ timeout: 8_000 });
+      await expect(
+        page
+          .locator(
+            ".arco-message:has-text('Workspace cleared, using temporary workspace'), .arco-message:has-text('已清空工作区，将使用临时工作区')"
+          )
+          .first()
+      ).toBeVisible({ timeout: 8_000 });
     } else {
       expect(hasClearOption).toBe(false);
     }

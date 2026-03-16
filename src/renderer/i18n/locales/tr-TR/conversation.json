@@ -103,9 +103,16 @@
     "refresh": "Yenile",
     "temporarySpace": "Geçici Alan",
     "changeWorkspace": "Çalışma Alanını Değiştir",
+    "workspaceSelector": {
+      "actionsTitle": "Boş klasörden başla",
+      "openFolder": "Yeni klasör aç",
+      "recentTitle": "Son çalışma alanları",
+      "searchPlaceholder": "Çalışma alanlarında ara",
+      "empty": "Eşleşen çalışma alanı yok"
+    },
     "migration": {
       "title": "Çalışma Alanını Değiştir",
-      "currentWorkspaceLabel": "Mevcut geçici çalışma alanı: ",
+      "currentWorkspaceLabel": "Mevcut geçici çalışma alanı：",
       "moveToNewFolder": "Yeni klasöre taşı (Çalışma Alanı)",
       "selectFolder": "Klasör seç",
       "hint": "Dosyalar yeni klasöre taşınacak, sohbet geçmişi kaybolmayacak",
@@ -119,7 +126,7 @@
       "error": "Çalışma alanı taşınamadı",
       "migrating": "Taşınıyor...",
       "cronMigrationTitle": "Zamanlanmış görevler bulundu",
-      "cronMigrationHint": "Mevcut konuşmada zamanlanmış görevler var. Bunları yeni çalışma alanına taşımak ister misiniz?",
+      "cronMigrationHint": "Mevcut konuşmada zamanlanmış görevler var. Bunları yeni çalışma alanına taşımak ister misiniz？",
       "cronMigrationConfirm": "Taşı ve güncelle",
       "cronMigrationSkip": "Taşıma (silinecek)"
     },

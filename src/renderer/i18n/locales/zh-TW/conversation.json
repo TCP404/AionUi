@@ -110,6 +110,13 @@
     "refresh": "重新整理",
     "temporarySpace": "臨時空間",
     "changeWorkspace": "更換工作空間",
+    "workspaceSelector": {
+      "actionsTitle": "從空資料夾開始",
+      "openFolder": "開啟新資料夾",
+      "recentTitle": "最近的工作空間",
+      "searchPlaceholder": "搜尋工作空間",
+      "empty": "沒有相符的工作空間"
+    },
     "migration": {
       "title": "更換工作空間",
       "currentWorkspaceLabel": "當前臨時工作空間：",

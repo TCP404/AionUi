@@ -4,7 +4,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import SearchableSelectorPanel, { type SearchableSelectorSection } from '@/renderer/components/base/SearchableSelectorPanel';
+import SearchableSelectorPanel, {
+  type SearchableSelectorSection,
+} from '@/renderer/components/base/SearchableSelectorPanel';
 import { useLayoutContext } from '@/renderer/context/LayoutContext';
 import { useRecentWorkspaces } from '@/renderer/hooks/useRecentWorkspaces';
 import { iconColors } from '@/renderer/theme/colors';
@@ -32,13 +34,22 @@ export type WorkspaceShortcutSelectorProps = {
   className?: string;
 };
 
-export const WorkspaceSelectorPopover: React.FC<WorkspaceSelectorPopoverProps> = ({ workspacePath, onSelectWorkspace, onPickWorkspace, onClearWorkspace, children }) => {
+export const WorkspaceSelectorPopover: React.FC<WorkspaceSelectorPopoverProps> = ({
+  workspacePath,
+  onSelectWorkspace,
+  onPickWorkspace,
+  onClearWorkspace,
+  children,
+}) => {
   const { t } = useTranslation();
   const [visible, setVisible] = useState(false);
   const [query, setQuery] = useState('');
   const { workspaces, refresh } = useRecentWorkspaces();
 
-  const normalizedCurrentWorkspace = useMemo(() => normalizeWorkspacePath(workspacePath).toLowerCase(), [workspacePath]);
+  const normalizedCurrentWorkspace = useMemo(
+    () => normalizeWorkspacePath(workspacePath).toLowerCase(),
+    [workspacePath]
+  );
 
   const orderedWorkspaces = useMemo(() => {
     return [...workspaces].sort((left, right) => {
@@ -87,18 +98,22 @@ export const WorkspaceSelectorPopover: React.FC<WorkspaceSelectorPopoverProps> =
     [refresh]
   );
 
-  const workspaceButtonLabel = workspacePath ? getWorkspaceDisplayName(workspacePath) : t('conversation.welcome.specifyWorkspace');
-  const workspaceButtonTooltip = workspacePath ? `${t('conversation.welcome.currentWorkspace')}: ${workspacePath}` : t('conversation.workspace.changeWorkspace');
+  const workspaceButtonLabel = workspacePath
+    ? getWorkspaceDisplayName(workspacePath)
+    : t('conversation.welcome.specifyWorkspace');
+  const workspaceButtonTooltip = workspacePath
+    ? `${t('conversation.welcome.currentWorkspace')}: ${workspacePath}`
+    : t('conversation.workspace.changeWorkspace');
 
   const sections = useMemo<SearchableSelectorSection[]>(() => {
     const nextSections: SearchableSelectorSection[] = [
       {
         key: 'actions',
-        title: t('conversation.workspaceSelector.actionsTitle', { defaultValue: '从空文件夹开始' }),
+        title: t('conversation.workspace.workspaceSelector.actionsTitle', { defaultValue: '从空文件夹开始' }),
         items: [
           {
             key: 'open-folder',
-            label: t('conversation.workspaceSelector.openFolder', { defaultValue: '打开新文件夹' }),
+            label: t('conversation.workspace.workspaceSelector.openFolder', { defaultValue: '打开新文件夹' }),
             icon: <FolderOpen theme='outline' size='16' fill={iconColors.secondary} />,
             keywords: [t('conversation.welcome.openFolder'), t('conversation.welcome.specifyWorkspace')],
             onSelect: handleOpenFolder,
@@ -124,7 +139,7 @@ export const WorkspaceSelectorPopover: React.FC<WorkspaceSelectorPopoverProps> =
     if (orderedWorkspaces.length > 0) {
       nextSections.push({
         key: 'recent',
-        title: t('conversation.workspaceSelector.recentTitle', { defaultValue: '最近使用' }),
+        title: t('conversation.workspace.workspaceSelector.recentTitle', { defaultValue: '最近使用' }),
         items: orderedWorkspaces.map((workspace) => ({
           key: workspace.path,
           label: workspace.label,
@@ -138,12 +153,38 @@ export const WorkspaceSelectorPopover: React.FC<WorkspaceSelectorPopoverProps> =
     }
 
     return nextSections;
-  }, [closeSelector, handleOpenFolder, handleSelectWorkspace, normalizedCurrentWorkspace, onClearWorkspace, orderedWorkspaces, t, workspacePath]);
+  }, [
+    closeSelector,
+    handleOpenFolder,
+    handleSelectWorkspace,
+    normalizedCurrentWorkspace,
+    onClearWorkspace,
+    orderedWorkspaces,
+    t,
+    workspacePath,
+  ]);
 
-  const content = <SearchableSelectorPanel sections={sections} query={query} onQueryChange={setQuery} searchPlaceholder={t('conversation.workspaceSelector.searchPlaceholder', { defaultValue: '搜索工作空间' })} emptyText={t('conversation.workspaceSelector.empty', { defaultValue: '没有匹配的工作空间' })} />;
+  const content = (
+    <SearchableSelectorPanel
+      sections={sections}
+      query={query}
+      onQueryChange={setQuery}
+      searchPlaceholder={t('conversation.workspace.workspaceSelector.searchPlaceholder', {
+        defaultValue: '搜索工作空间',
+      })}
+      emptyText={t('conversation.workspace.workspaceSelector.empty', { defaultValue: '没有匹配的工作空间' })}
+    />
+  );
 
   return (
-    <Popover trigger='click' position='bl' popupVisible={visible} onVisibleChange={handleVisibleChange} content={content} unmountOnExit>
+    <Popover
+      trigger='click'
+      position='bl'
+      popupVisible={visible}
+      onVisibleChange={handleVisibleChange}
+      content={content}
+      unmountOnExit
+    >
       <span className='inline-flex'>
         {children({
           visible,
@@ -155,16 +196,36 @@ export const WorkspaceSelectorPopover: React.FC<WorkspaceSelectorPopoverProps> =
   );
 };
 
-const WorkspaceShortcutSelector: React.FC<WorkspaceShortcutSelectorProps> = ({ workspacePath, onSelectWorkspace, onPickWorkspace, onClearWorkspace, className }) => {
+const WorkspaceShortcutSelector: React.FC<WorkspaceShortcutSelectorProps> = ({
+  workspacePath,
+  onSelectWorkspace,
+  onPickWorkspace,
+  onClearWorkspace,
+  className,
+}) => {
   const layout = useLayoutContext();
   const isMobile = Boolean(layout?.isMobile);
 
   return (
-    <WorkspaceSelectorPopover workspacePath={workspacePath} onSelectWorkspace={onSelectWorkspace} onPickWorkspace={onPickWorkspace} onClearWorkspace={onClearWorkspace}>
+    <WorkspaceSelectorPopover
+      workspacePath={workspacePath}
+      onSelectWorkspace={onSelectWorkspace}
+      onPickWorkspace={onPickWorkspace}
+      onClearWorkspace={onClearWorkspace}
+    >
       {({ visible, workspaceLabel, workspaceTooltip }) => (
         <Tooltip content={workspaceTooltip} disabled={isMobile || visible}>
-          <Button type='secondary' className={`${styles.workspaceShortcutButton}${className ? ` ${className}` : ''}`} aria-label={workspaceTooltip}>
-            <FolderOpen theme='outline' size='14' fill={iconColors.secondary} style={{ lineHeight: 0, flexShrink: 0 }} />
+          <Button
+            type='secondary'
+            className={`${styles.workspaceShortcutButton}${className ? ` ${className}` : ''}`}
+            aria-label={workspaceTooltip}
+          >
+            <FolderOpen
+              theme='outline'
+              size='14'
+              fill={iconColors.secondary}
+              style={{ lineHeight: 0, flexShrink: 0 }}
+            />
             <span className={styles.workspaceShortcutLabel}>{workspaceLabel}</span>
             <Down className={styles.workspaceShortcutCaret} theme='outline' size='12' fill={iconColors.secondary} />
           </Button>
