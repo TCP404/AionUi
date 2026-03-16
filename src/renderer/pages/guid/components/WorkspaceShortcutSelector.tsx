@@ -20,6 +20,7 @@ export type WorkspaceSelectorPopoverProps = {
   workspacePath: string;
   onSelectWorkspace: (workspacePath: string) => void;
   onPickWorkspace: () => void;
+  onClearWorkspace?: () => void;
   children: (props: { visible: boolean; workspaceLabel: string; workspaceTooltip: string }) => React.ReactElement;
 };
 
@@ -27,10 +28,11 @@ export type WorkspaceShortcutSelectorProps = {
   workspacePath: string;
   onSelectWorkspace: (workspacePath: string) => void;
   onPickWorkspace: () => void;
+  onClearWorkspace?: () => void;
   className?: string;
 };
 
-export const WorkspaceSelectorPopover: React.FC<WorkspaceSelectorPopoverProps> = ({ workspacePath, onSelectWorkspace, onPickWorkspace, children }) => {
+export const WorkspaceSelectorPopover: React.FC<WorkspaceSelectorPopoverProps> = ({ workspacePath, onSelectWorkspace, onPickWorkspace, onClearWorkspace, children }) => {
   const { t } = useTranslation();
   const [visible, setVisible] = useState(false);
   const [query, setQuery] = useState('');
@@ -101,6 +103,20 @@ export const WorkspaceSelectorPopover: React.FC<WorkspaceSelectorPopoverProps> =
             keywords: [t('conversation.welcome.openFolder'), t('conversation.welcome.specifyWorkspace')],
             onSelect: handleOpenFolder,
           },
+          ...(workspacePath && onClearWorkspace
+            ? [
+                {
+                  key: 'clear-workspace',
+                  label: t('conversation.welcome.clearWorkspace', { defaultValue: '移除已选文件夹' }),
+                  icon: <FolderOpen theme='outline' size='16' fill={iconColors.secondary} />,
+                  keywords: [t('conversation.welcome.none'), t('conversation.welcome.clearWorkspace')],
+                  onSelect: () => {
+                    onClearWorkspace();
+                    closeSelector();
+                  },
+                },
+              ]
+            : []),
         ],
       },
     ];
@@ -122,7 +138,7 @@ export const WorkspaceSelectorPopover: React.FC<WorkspaceSelectorPopoverProps> =
     }
 
     return nextSections;
-  }, [handleOpenFolder, handleSelectWorkspace, normalizedCurrentWorkspace, orderedWorkspaces, t]);
+  }, [closeSelector, handleOpenFolder, handleSelectWorkspace, normalizedCurrentWorkspace, onClearWorkspace, orderedWorkspaces, t, workspacePath]);
 
   const content = <SearchableSelectorPanel sections={sections} query={query} onQueryChange={setQuery} searchPlaceholder={t('conversation.workspaceSelector.searchPlaceholder', { defaultValue: '搜索工作空间' })} emptyText={t('conversation.workspaceSelector.empty', { defaultValue: '没有匹配的工作空间' })} />;
 
@@ -139,12 +155,12 @@ export const WorkspaceSelectorPopover: React.FC<WorkspaceSelectorPopoverProps> =
   );
 };
 
-const WorkspaceShortcutSelector: React.FC<WorkspaceShortcutSelectorProps> = ({ workspacePath, onSelectWorkspace, onPickWorkspace, className }) => {
+const WorkspaceShortcutSelector: React.FC<WorkspaceShortcutSelectorProps> = ({ workspacePath, onSelectWorkspace, onPickWorkspace, onClearWorkspace, className }) => {
   const layout = useLayoutContext();
   const isMobile = Boolean(layout?.isMobile);
 
   return (
-    <WorkspaceSelectorPopover workspacePath={workspacePath} onSelectWorkspace={onSelectWorkspace} onPickWorkspace={onPickWorkspace}>
+    <WorkspaceSelectorPopover workspacePath={workspacePath} onSelectWorkspace={onSelectWorkspace} onPickWorkspace={onPickWorkspace} onClearWorkspace={onClearWorkspace}>
       {({ visible, workspaceLabel, workspaceTooltip }) => (
         <Tooltip content={workspaceTooltip} disabled={isMobile || visible}>
           <Button type='secondary' className={`${styles.workspaceShortcutButton}${className ? ` ${className}` : ''}`} aria-label={workspaceTooltip}>

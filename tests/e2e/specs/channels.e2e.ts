@@ -14,6 +14,37 @@ const ACTIVE_CHANNEL_IDS = ['telegram', 'lark', 'dingtalk'] as const;
 const COMING_SOON_CHANNEL_IDS = ['slack', 'discord'] as const;
 
 test.describe('Channels', () => {
+  test('telegram workspace selector supports clear action when workspace exists', async ({ page }) => {
+    await goToChannelsTab(page);
+
+    const telegramItem = page.locator(channelItemById('telegram')).first();
+    await expect(telegramItem).toBeVisible({ timeout: 8_000 });
+
+    const collapseHeader = telegramItem.locator('.arco-collapse-item-header').first();
+    const collapseContent = telegramItem.locator('.arco-collapse-item-content').first();
+    const contentStyle = (await collapseContent.getAttribute('style')) || '';
+    if (contentStyle.includes('display: none')) {
+      await collapseHeader.click();
+    }
+
+    const workspaceButton = telegramItem.locator('button.min-w-240px').first();
+    await expect(workspaceButton).toBeVisible({ timeout: 8_000 });
+    await workspaceButton.click();
+
+    const openFolderOption = page.locator(".arco-dropdown-menu-item:has-text('Open a new folder'), .arco-dropdown-menu-item:has-text('打开新文件夹')").first();
+    await expect(openFolderOption).toBeVisible({ timeout: 8_000 });
+
+    const clearWorkspaceOption = page.locator(".arco-dropdown-menu-item:has-text('Clear workspace'), .arco-dropdown-menu-item:has-text('移除已选文件夹')").first();
+    const hasClearOption = (await clearWorkspaceOption.count()) > 0;
+
+    if (hasClearOption) {
+      await clearWorkspaceOption.click();
+      await expect(page.locator(".arco-message:has-text('Workspace cleared, using temporary workspace'), .arco-message:has-text('已清空工作区，将使用临时工作区')").first()).toBeVisible({ timeout: 8_000 });
+    } else {
+      expect(hasClearOption).toBe(false);
+    }
+  });
+
   test('channels settings page renders', async ({ page }) => {
     await goToChannelsTab(page);
     await expect(page.locator(channelItemById('telegram'))).toBeVisible({ timeout: 8_000 });

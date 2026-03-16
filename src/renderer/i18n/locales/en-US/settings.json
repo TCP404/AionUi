@@ -370,6 +370,7 @@
   "channels.workspace": "Workspace",
   "channels.workspaceDesc": "Set dedicated working directory for this channel conversations",
   "channels.workspaceUpdated": "Workspace updated",
+  "channels.workspaceCleared": "Workspace cleared, using temporary workspace",
   "channels.extension.requiredField": "Please fill required field: {{field}}",
   "channels.extension.enabled": "Channel enabled",
   "channels.extension.enableFailed": "Failed to enable channel",

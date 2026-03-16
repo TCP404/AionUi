@@ -1355,10 +1355,23 @@ export class AionUIDatabase {
 
       return { success: true, data: request };
     } catch (error: any) {
+      // Backward/forward compatibility: some schema variants require non-null plugin_id.
+      if (String(error?.message || '').includes('plugin_id')) {
+        try {
+          const pluginId = `${String(request.platformType)}_default`;
+          const stmtWithPluginId = this.db.prepare(`
+            INSERT INTO assistant_pairing_codes (code, plugin_id, platform_user_id, platform_type, display_name, requested_at, expires_at, status)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+          `);
+          stmtWithPluginId.run(request.code, pluginId, request.platformUserId, request.platformType, request.displayName ?? null, request.requestedAt, request.expiresAt, request.status);
+          return { success: true, data: request };
+        } catch (fallbackError: any) {
+          return { success: false, error: fallbackError.message };
+        }
+      }
       return { success: false, error: error.message };
     }
   }
-
   /**
    * Update pairing request status
    */

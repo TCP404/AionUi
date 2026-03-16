@@ -6,7 +6,9 @@
 
 import { ipcBridge } from '@/common';
 import type { TChatConversation } from '@/common/storage';
-import { addEventListener } from '@/renderer/utils/emitter';
+import { addEventListener, emitter } from '@/renderer/utils/emitter';
+import { removeWorkspaceEntry, renameWorkspaceEntry } from '@/renderer/utils/workspaceFs';
+import { Message } from '@arco-design/web-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
@@ -136,11 +138,61 @@ export const useConversations = () => {
     });
   }, []);
 
+  const renameWorkspaceGroup = useCallback(
+    async (workspace: string, nextName: string): Promise<boolean> => {
+      const trimmedName = nextName.trim();
+      if (!trimmedName) {
+        Message.warning(t('conversation.workspace.contextMenu.renameEmpty'));
+        return false;
+      }
+
+      try {
+        const response = await renameWorkspaceEntry(workspace, trimmedName);
+        if (!response?.success) {
+          Message.error(response?.msg || t('conversation.workspace.contextMenu.renameFailed'));
+          return false;
+        }
+
+        emitter.emit('chat.history.refresh');
+        Message.success(t('conversation.workspace.contextMenu.renameSuccess'));
+        return true;
+      } catch (error) {
+        console.error('[WorkspaceGroupedHistory] Failed to rename workspace group:', error);
+        Message.error(t('conversation.workspace.contextMenu.renameFailed'));
+        return false;
+      }
+    },
+    [t]
+  );
+
+  const deleteWorkspaceGroup = useCallback(
+    async (workspace: string): Promise<boolean> => {
+      try {
+        const response = await removeWorkspaceEntry(workspace);
+        if (!response?.success) {
+          Message.error(response?.msg || t('conversation.workspace.contextMenu.deleteFailed'));
+          return false;
+        }
+
+        emitter.emit('chat.history.refresh');
+        Message.success(t('conversation.workspace.contextMenu.deleteSuccess'));
+        return true;
+      } catch (error) {
+        console.error('[WorkspaceGroupedHistory] Failed to delete workspace group:', error);
+        Message.error(t('conversation.workspace.contextMenu.deleteFailed'));
+        return false;
+      }
+    },
+    [t]
+  );
+
   return {
     conversations,
     expandedWorkspaces,
     pinnedConversations,
     timelineSections,
     handleToggleWorkspace,
+    renameWorkspaceGroup,
+    deleteWorkspaceGroup,
   };
 };

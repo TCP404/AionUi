@@ -27,6 +27,12 @@ Object.defineProperty(globalThis, 'localStorage', { value: localStorageMock, wri
 // ── Mocks ────────────────────────────────────────────────────────────────────
 
 const mockInvoke = vi.fn().mockResolvedValue([]);
+const mockEmitterEmit = vi.fn();
+const mockRenameWorkspaceEntry = vi.fn();
+const mockRemoveWorkspaceEntry = vi.fn();
+const mockMessageSuccess = vi.fn();
+const mockMessageWarning = vi.fn();
+const mockMessageError = vi.fn();
 
 vi.mock('../../src/common', () => ({
   ipcBridge: {
@@ -56,6 +62,22 @@ vi.mock('../../src/renderer/pages/conversation/grouped-history/utils/groupingHel
 
 vi.mock('../../src/renderer/utils/emitter', () => ({
   addEventListener: () => () => {},
+  emitter: {
+    emit: (...args: unknown[]) => mockEmitterEmit(...args),
+  },
+}));
+
+vi.mock('../../src/renderer/utils/workspaceFs', () => ({
+  renameWorkspaceEntry: (...args: unknown[]) => mockRenameWorkspaceEntry(...args),
+  removeWorkspaceEntry: (...args: unknown[]) => mockRemoveWorkspaceEntry(...args),
+}));
+
+vi.mock('@arco-design/web-react', () => ({
+  Message: {
+    success: (...args: unknown[]) => mockMessageSuccess(...args),
+    warning: (...args: unknown[]) => mockMessageWarning(...args),
+    error: (...args: unknown[]) => mockMessageError(...args),
+  },
 }));
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -87,6 +109,12 @@ describe('useConversations - workspace expansion', () => {
     storageMap.clear();
     testState.sections = [];
     mockInvoke.mockResolvedValue([]);
+    mockEmitterEmit.mockReset();
+    mockRenameWorkspaceEntry.mockReset();
+    mockRemoveWorkspaceEntry.mockReset();
+    mockMessageSuccess.mockReset();
+    mockMessageWarning.mockReset();
+    mockMessageError.mockReset();
   });
 
   it('should auto-expand all workspaces on first load when localStorage is empty', async () => {
@@ -171,5 +199,74 @@ describe('useConversations - workspace expansion', () => {
 
     // Should stay collapsed, not re-expand
     expect(result.current.expandedWorkspaces).toEqual([]);
+  });
+
+  it('should reject empty workspace rename', async () => {
+    const { result } = renderHook(() => useConversations());
+
+    let ok = false;
+    await act(async () => {
+      ok = await result.current.renameWorkspaceGroup('/ws/a', '   ');
+    });
+
+    expect(ok).toBe(false);
+    expect(mockRenameWorkspaceEntry).not.toHaveBeenCalled();
+    expect(mockMessageWarning).toHaveBeenCalledWith('conversation.workspace.contextMenu.renameEmpty');
+  });
+
+  it('should rename workspace group and refresh history on success', async () => {
+    mockRenameWorkspaceEntry.mockResolvedValue({ success: true });
+    const { result } = renderHook(() => useConversations());
+
+    let ok = false;
+    await act(async () => {
+      ok = await result.current.renameWorkspaceGroup('/ws/a', '  Renamed  ');
+    });
+
+    expect(ok).toBe(true);
+    expect(mockRenameWorkspaceEntry).toHaveBeenCalledWith('/ws/a', 'Renamed');
+    expect(mockEmitterEmit).toHaveBeenCalledWith('chat.history.refresh');
+    expect(mockMessageSuccess).toHaveBeenCalledWith('conversation.workspace.contextMenu.renameSuccess');
+  });
+
+  it('should show error when workspace rename fails', async () => {
+    mockRenameWorkspaceEntry.mockResolvedValue({ success: false, msg: 'rename failed' });
+    const { result } = renderHook(() => useConversations());
+
+    let ok = true;
+    await act(async () => {
+      ok = await result.current.renameWorkspaceGroup('/ws/a', 'Renamed');
+    });
+
+    expect(ok).toBe(false);
+    expect(mockMessageError).toHaveBeenCalledWith('rename failed');
+  });
+
+  it('should delete workspace group and refresh history on success', async () => {
+    mockRemoveWorkspaceEntry.mockResolvedValue({ success: true });
+    const { result } = renderHook(() => useConversations());
+
+    let ok = false;
+    await act(async () => {
+      ok = await result.current.deleteWorkspaceGroup('/ws/a');
+    });
+
+    expect(ok).toBe(true);
+    expect(mockRemoveWorkspaceEntry).toHaveBeenCalledWith('/ws/a');
+    expect(mockEmitterEmit).toHaveBeenCalledWith('chat.history.refresh');
+    expect(mockMessageSuccess).toHaveBeenCalledWith('conversation.workspace.contextMenu.deleteSuccess');
+  });
+
+  it('should show error when workspace deletion fails', async () => {
+    mockRemoveWorkspaceEntry.mockResolvedValue({ success: false, msg: 'delete failed' });
+    const { result } = renderHook(() => useConversations());
+
+    let ok = true;
+    await act(async () => {
+      ok = await result.current.deleteWorkspaceGroup('/ws/a');
+    });
+
+    expect(ok).toBe(false);
+    expect(mockMessageError).toHaveBeenCalledWith('delete failed');
   });
 });
