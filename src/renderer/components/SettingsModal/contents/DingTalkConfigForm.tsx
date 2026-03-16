@@ -5,14 +5,17 @@
  */
 
 import type { IChannelPairingRequest, IChannelPluginStatus, IChannelUser } from '@/channels/types';
-import { acpConversation, channel } from '@/common/ipcBridge';
+import { acpConversation, channel, dialog } from '@/common/ipcBridge';
 import { ConfigStorage } from '@/common/storage';
 import { openExternalUrl } from '@/renderer/utils/platform';
 import GeminiModelSelector from '@/renderer/pages/conversation/gemini/GeminiModelSelector';
 import type { GeminiModelSelection } from '@/renderer/pages/conversation/gemini/useGeminiModelSelection';
 import type { AcpBackendAll } from '@/types/acpTypes';
 import { Button, Dropdown, Empty, Input, Menu, Message, Spin, Tooltip } from '@arco-design/web-react';
-import { CheckOne, CloseOne, Copy, Delete, Down, Refresh } from '@icon-park/react';
+import { CheckOne, CloseOne, Copy, Delete, Down, FolderOpen, Refresh } from '@icon-park/react';
+import { WorkspaceSelectorPopover } from '@/renderer/pages/guid/components/WorkspaceShortcutSelector';
+import { getWorkspaceDisplayName } from '@/renderer/utils/workspace';
+import { normalizeWorkspacePath } from '@/renderer/utils/recentWorkspaces';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -81,6 +84,7 @@ const DingTalkConfigForm: React.FC<DingTalkConfigFormProps> = ({ pluginStatus, m
   const [selectedAgent, setSelectedAgent] = useState<{ backend: AcpBackendAll; name?: string; customAgentId?: string }>(
     { backend: 'gemini' }
   );
+  const [selectedWorkspace, setSelectedWorkspace] = useState('');
 
   // Load pending pairings
   const loadPendingPairings = useCallback(async () => {
@@ -122,9 +126,10 @@ const DingTalkConfigForm: React.FC<DingTalkConfigFormProps> = ({ pluginStatus, m
   useEffect(() => {
     const loadAgentsAndSelection = async () => {
       try {
-        const [agentsResp, saved] = await Promise.all([
+        const [agentsResp, saved, savedWorkspace] = await Promise.all([
           acpConversation.getAvailableAgents.invoke(),
           ConfigStorage.get('assistant.dingtalk.agent'),
+          ConfigStorage.get('assistant.dingtalk.workspace'),
         ]);
 
         if (agentsResp.success && agentsResp.data) {
@@ -149,6 +154,10 @@ const DingTalkConfigForm: React.FC<DingTalkConfigFormProps> = ({ pluginStatus, m
         } else if (typeof saved === 'string') {
           setSelectedAgent({ backend: saved as AcpBackendAll });
         }
+
+        if (typeof savedWorkspace === 'string') {
+          setSelectedWorkspace(savedWorkspace);
+        }
       } catch (error) {
         console.error('[DingTalkConfig] Failed to load agents:', error);
       }
@@ -161,7 +170,11 @@ const DingTalkConfigForm: React.FC<DingTalkConfigFormProps> = ({ pluginStatus, m
     try {
       await ConfigStorage.set('assistant.dingtalk.agent', agent);
       await channel.syncChannelSettings
-        .invoke({ platform: 'dingtalk', agent })
+        .invoke({
+          platform: 'dingtalk',
+          agent,
+          workspace: typeof selectedWorkspace === 'string' ? selectedWorkspace : undefined,
+        })
         .catch((err) => console.warn('[DingTalkConfig] syncChannelSettings failed:', err));
       Message.success(t('settings.assistant.agentSwitched', 'Agent switched successfully'));
     } catch (error) {
@@ -169,6 +182,72 @@ const DingTalkConfigForm: React.FC<DingTalkConfigFormProps> = ({ pluginStatus, m
       Message.error(t('common.saveFailed', 'Failed to save'));
     }
   };
+
+  const handlePickWorkspace = useCallback(async () => {
+    try {
+      const dirs = await dialog.showOpen.invoke({
+        defaultPath: selectedWorkspace || undefined,
+        properties: ['openDirectory'],
+      });
+      const nextWorkspace = dirs?.[0];
+      if (!nextWorkspace) return;
+      setSelectedWorkspace(nextWorkspace);
+      await ConfigStorage.set('assistant.dingtalk.workspace', nextWorkspace);
+      await channel.syncChannelSettings
+        .invoke({
+          platform: 'dingtalk',
+          agent: selectedAgent,
+          workspace: nextWorkspace,
+        })
+        .catch((err) => console.warn('[DingTalkConfig] syncChannelSettings failed:', err));
+      Message.success(t('settings.channels.workspaceUpdated', 'Workspace updated'));
+    } catch (error) {
+      console.error('[DingTalkConfig] Failed to pick workspace:', error);
+      Message.error(t('common.saveFailed', 'Failed to save'));
+    }
+  }, [selectedAgent, selectedWorkspace, t]);
+
+  const handleSelectWorkspace = useCallback(
+    async (workspacePath: string) => {
+      const normalizedNext = normalizeWorkspacePath(workspacePath);
+      const normalizedCurrent = normalizeWorkspacePath(selectedWorkspace);
+      if (!normalizedNext || normalizedNext === normalizedCurrent) return;
+      try {
+        setSelectedWorkspace(workspacePath);
+        await ConfigStorage.set('assistant.dingtalk.workspace', workspacePath);
+        await channel.syncChannelSettings
+          .invoke({
+            platform: 'dingtalk',
+            agent: selectedAgent,
+            workspace: workspacePath,
+          })
+          .catch((err) => console.warn('[DingTalkConfig] syncChannelSettings failed:', err));
+        Message.success(t('settings.channels.workspaceUpdated', 'Workspace updated'));
+      } catch (error) {
+        console.error('[DingTalkConfig] Failed to select workspace:', error);
+        Message.error(t('common.saveFailed', 'Failed to save'));
+      }
+    },
+    [selectedAgent, selectedWorkspace, t]
+  );
+  const handleClearWorkspace = useCallback(async () => {
+    if (!selectedWorkspace) return;
+    try {
+      setSelectedWorkspace('');
+      await ConfigStorage.set('assistant.dingtalk.workspace', '');
+      await channel.syncChannelSettings
+        .invoke({
+          platform: 'dingtalk',
+          agent: selectedAgent,
+          workspace: '',
+        })
+        .catch((err) => console.warn('[DingTalkConfig] syncChannelSettings failed:', err));
+      Message.success(t('settings.channels.workspaceCleared', 'Workspace cleared, using temporary workspace'));
+    } catch (error) {
+      console.error('[DingTalkConfig] Failed to clear workspace:', error);
+      Message.error(t('common.saveFailed', 'Failed to save'));
+    }
+  }, [selectedAgent, selectedWorkspace, t]);
 
   // Listen for pairing requests
   useEffect(() => {
@@ -533,6 +612,33 @@ const DingTalkConfigForm: React.FC<DingTalkConfigFormProps> = ({ pluginStatus, m
         </PreferenceRow>
       </div>
 
+      <PreferenceRow
+        label={t('settings.channels.workspace', 'Workspace')}
+        description={t(
+          'settings.channels.workspaceDesc',
+          'Set dedicated working directory for this channel conversations'
+        )}
+      >
+        <WorkspaceSelectorPopover
+          workspacePath={selectedWorkspace}
+          onSelectWorkspace={handleSelectWorkspace}
+          onPickWorkspace={handlePickWorkspace}
+          onClearWorkspace={handleClearWorkspace}
+        >
+          {({ workspaceLabel, workspaceTooltip }) => (
+            <Tooltip content={workspaceTooltip}>
+              <Button type='secondary' className='min-w-240px flex items-center justify-between gap-8px'>
+                <span className='inline-flex items-center gap-6px min-w-0'>
+                  <FolderOpen theme='outline' size='14' />
+                  <span className='truncate'>
+                    {selectedWorkspace ? getWorkspaceDisplayName(selectedWorkspace) : workspaceLabel}
+                  </span>
+                </span>
+              </Button>
+            </Tooltip>
+          )}
+        </WorkspaceSelectorPopover>
+      </PreferenceRow>
       {/* Default Model Selection */}
       <PreferenceRow
         label={t('settings.assistant.defaultModel', 'Model')}

@@ -172,12 +172,18 @@ export const handleSessionNew: ActionHandler = async (context) => {
 
   // Selected agent (defaults to Gemini)
   let savedAgent: unknown = undefined;
+  let savedWorkspace: unknown = undefined;
   try {
     savedAgent = await (platform === 'lark'
       ? ProcessConfig.get('assistant.lark.agent')
       : platform === 'dingtalk'
         ? ProcessConfig.get('assistant.dingtalk.agent')
         : ProcessConfig.get('assistant.telegram.agent'));
+    savedWorkspace = await (platform === 'lark'
+      ? ProcessConfig.get('assistant.lark.workspace')
+      : platform === 'dingtalk'
+        ? ProcessConfig.get('assistant.dingtalk.workspace')
+        : ProcessConfig.get('assistant.telegram.workspace'));
   } catch {
     // ignore
   }
@@ -208,7 +214,10 @@ export const handleSessionNew: ActionHandler = async (context) => {
           source,
           name,
           channelChatId,
-          extra: {},
+          extra: {
+            workspace: typeof savedWorkspace === 'string' ? savedWorkspace : undefined,
+            customWorkspace: typeof savedWorkspace === 'string' && savedWorkspace.trim().length > 0,
+          },
         })
       : backend === 'gemini'
         ? await ConversationService.createGeminiConversation({
@@ -216,6 +225,8 @@ export const handleSessionNew: ActionHandler = async (context) => {
             source,
             name,
             channelChatId,
+            workspace: typeof savedWorkspace === 'string' ? savedWorkspace : undefined,
+            customWorkspace: typeof savedWorkspace === 'string' && savedWorkspace.trim().length > 0,
           })
         : backend === 'openclaw-gateway'
           ? await ConversationService.createConversation({
@@ -224,7 +235,10 @@ export const handleSessionNew: ActionHandler = async (context) => {
               source,
               name,
               channelChatId,
-              extra: {},
+              extra: {
+                workspace: typeof savedWorkspace === 'string' ? savedWorkspace : undefined,
+                customWorkspace: typeof savedWorkspace === 'string' && savedWorkspace.trim().length > 0,
+              },
             })
           : await ConversationService.createConversation({
               type: 'acp',
@@ -236,6 +250,8 @@ export const handleSessionNew: ActionHandler = async (context) => {
                 backend: backend as AcpBackend,
                 customAgentId,
                 agentName,
+                workspace: typeof savedWorkspace === 'string' ? savedWorkspace : undefined,
+                customWorkspace: typeof savedWorkspace === 'string' && savedWorkspace.trim().length > 0,
               },
             });
 
@@ -249,7 +265,7 @@ export const handleSessionNew: ActionHandler = async (context) => {
     context.channelUser,
     result.conversation.id,
     agentType,
-    undefined,
+    typeof savedWorkspace === 'string' ? savedWorkspace : undefined,
     channelChatId
   );
 
@@ -643,7 +659,22 @@ export const handleAgentSelect: ActionHandler = async (context, params) => {
   sessionManager.clearSession(context.channelUser.id, context.chatId);
 
   // Create new session with the selected agent type (scoped by chatId)
-  const session = sessionManager.createSession(context.channelUser, newAgentType, undefined, context.chatId);
+  let savedWorkspace: unknown = undefined;
+  try {
+    savedWorkspace = await (context.platform === 'lark'
+      ? ProcessConfig.get('assistant.lark.workspace')
+      : context.platform === 'dingtalk'
+        ? ProcessConfig.get('assistant.dingtalk.workspace')
+        : ProcessConfig.get('assistant.telegram.workspace'));
+  } catch {
+    // ignore
+  }
+  const session = sessionManager.createSession(
+    context.channelUser,
+    newAgentType,
+    typeof savedWorkspace === 'string' ? savedWorkspace : undefined,
+    context.chatId
+  );
 
   const markup =
     context.platform === 'lark'

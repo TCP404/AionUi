@@ -10,19 +10,21 @@ import { getAgentModes, supportsModeSwitch, type AgentModeOption } from '@/rende
 import { useLayoutContext } from '@/renderer/context/LayoutContext';
 import { getCleanFileNames } from '@/renderer/services/FileService';
 import { iconColors } from '@/renderer/theme/colors';
-import type { AcpBackend, AcpBackendConfig, AvailableAgent } from '../types';
-import PresetAgentTag from './PresetAgentTag';
 import { Button, Dropdown, Menu, Tooltip } from '@arco-design/web-react';
 import { ArrowUp, FolderOpen, Plus, Shield, UploadOne } from '@icon-park/react';
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import styles from '../index.module.css';
+import type { AcpBackend, AcpBackendConfig, AvailableAgent } from '../types';
+import PresetAgentTag from './PresetAgentTag';
+import WorkspaceShortcutSelector from './WorkspaceShortcutSelector';
 
 type GuidActionRowProps = {
   // File handling
   files: string[];
   onFilesUploaded: (paths: string[]) => void;
   onSelectWorkspace: (dir: string) => void;
+  workspacePath: string;
 
   // Model selector node (rendered by parent)
   modelSelectorNode: React.ReactNode;
@@ -50,6 +52,7 @@ const GuidActionRow: React.FC<GuidActionRowProps> = ({
   files,
   onFilesUploaded,
   onSelectWorkspace,
+  workspacePath,
   modelSelectorNode,
   selectedAgent,
   effectiveModeAgent,
@@ -83,6 +86,35 @@ const GuidActionRow: React.FC<GuidActionRowProps> = ({
       : `${t('agentMode.permission')} · ${getModeDisplayLabel(currentModeOption)}`
     : t('agentMode.permission');
 
+  const handleSelectFiles = () => {
+    ipcBridge.dialog.showOpen
+      .invoke({ properties: ['openFile', 'multiSelections'] })
+      .then((uploadedFiles) => {
+        if (uploadedFiles && uploadedFiles.length > 0) {
+          onFilesUploaded(uploadedFiles);
+        }
+      })
+      .catch((error) => {
+        console.error('Failed to open file dialog:', error);
+      });
+  };
+
+  const handlePickWorkspace = () => {
+    ipcBridge.dialog.showOpen
+      .invoke({
+        defaultPath: workspacePath || undefined,
+        properties: ['openDirectory'],
+      })
+      .then((dirs) => {
+        if (dirs && dirs[0]) {
+          onSelectWorkspace(dirs[0]);
+        }
+      })
+      .catch((error) => {
+        console.error('Failed to open directory dialog:', error);
+      });
+  };
+
   return (
     <div className={styles.actionRow}>
       <div className={styles.actionTools}>
@@ -95,27 +127,9 @@ const GuidActionRow: React.FC<GuidActionRowProps> = ({
                 className='min-w-200px'
                 onClickMenuItem={(key) => {
                   if (key === 'file') {
-                    ipcBridge.dialog.showOpen
-                      .invoke({ properties: ['openFile', 'multiSelections'] })
-                      .then((uploadedFiles) => {
-                        if (uploadedFiles && uploadedFiles.length > 0) {
-                          onFilesUploaded(uploadedFiles);
-                        }
-                      })
-                      .catch((error) => {
-                        console.error('Failed to open file dialog:', error);
-                      });
+                    handleSelectFiles();
                   } else if (key === 'workspace') {
-                    ipcBridge.dialog.showOpen
-                      .invoke({ properties: ['openDirectory'] })
-                      .then((dirs) => {
-                        if (dirs && dirs[0]) {
-                          onSelectWorkspace(dirs[0]);
-                        }
-                      })
-                      .catch((error) => {
-                        console.error('Failed to open directory dialog:', error);
-                      });
+                    handlePickWorkspace();
                   }
                 }}
               >
@@ -140,10 +154,10 @@ const GuidActionRow: React.FC<GuidActionRowProps> = ({
                 shape='circle'
                 className={isPlusDropdownOpen ? styles.plusButtonRotate : ''}
                 icon={<Plus theme='outline' size='14' strokeWidth={2} fill={iconColors.primary} />}
-              ></Button>
+              />
               {files.length > 0 && (
                 <Tooltip
-                  className={'!max-w-max'}
+                  className='!max-w-max'
                   content={<span className='whitespace-break-spaces'>{getCleanFileNames(files).join('\n')}</span>}
                 >
                   <span className='text-t-primary'>File({files.length})</span>
@@ -181,6 +195,11 @@ const GuidActionRow: React.FC<GuidActionRowProps> = ({
         )}
       </div>
       <div className={styles.actionSubmit}>
+        <WorkspaceShortcutSelector
+          workspacePath={workspacePath}
+          onSelectWorkspace={onSelectWorkspace}
+          onPickWorkspace={handlePickWorkspace}
+        />
         <Button
           shape='circle'
           type='primary'

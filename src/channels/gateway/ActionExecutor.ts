@@ -383,12 +383,18 @@ export class ActionExecutor {
 
         // Read selected agent for this platform (defaults to Gemini)
         let savedAgent: unknown = undefined;
+        let savedWorkspace: unknown = undefined;
         try {
           savedAgent = await (platform === 'lark'
             ? ProcessConfig.get('assistant.lark.agent')
             : platform === 'dingtalk'
               ? ProcessConfig.get('assistant.dingtalk.agent')
               : ProcessConfig.get('assistant.telegram.agent'));
+          savedWorkspace = await (platform === 'lark'
+            ? ProcessConfig.get('assistant.lark.workspace')
+            : platform === 'dingtalk'
+              ? ProcessConfig.get('assistant.dingtalk.workspace')
+              : ProcessConfig.get('assistant.telegram.workspace'));
         } catch {
           // ignore
         }
@@ -425,7 +431,10 @@ export class ActionExecutor {
                 name: conversationName,
                 source,
                 channelChatId: chatId,
-                extra: {},
+                extra: {
+                  workspace: typeof savedWorkspace === 'string' ? savedWorkspace : undefined,
+                  customWorkspace: typeof savedWorkspace === 'string' && savedWorkspace.trim().length > 0,
+                },
               })
             : backend === 'gemini'
               ? await ConversationService.createGeminiConversation({
@@ -433,6 +442,8 @@ export class ActionExecutor {
                   name: conversationName,
                   source,
                   channelChatId: chatId,
+                  workspace: typeof savedWorkspace === 'string' ? savedWorkspace : undefined,
+                  customWorkspace: typeof savedWorkspace === 'string' && savedWorkspace.trim().length > 0,
                 })
               : backend === 'openclaw-gateway'
                 ? await ConversationService.createConversation({
@@ -441,7 +452,10 @@ export class ActionExecutor {
                     name: conversationName,
                     source,
                     channelChatId: chatId,
-                    extra: {},
+                    extra: {
+                      workspace: typeof savedWorkspace === 'string' ? savedWorkspace : undefined,
+                      customWorkspace: typeof savedWorkspace === 'string' && savedWorkspace.trim().length > 0,
+                    },
                   })
                 : await ConversationService.createConversation({
                     type: 'acp',
@@ -453,6 +467,8 @@ export class ActionExecutor {
                       backend: backend as AcpBackend,
                       customAgentId,
                       agentName,
+                      workspace: typeof savedWorkspace === 'string' ? savedWorkspace : undefined,
+                      customWorkspace: typeof savedWorkspace === 'string' && savedWorkspace.trim().length > 0,
                     },
                   });
 
@@ -462,7 +478,7 @@ export class ActionExecutor {
             channelUser,
             result.conversation.id,
             agentType as ChannelAgentType,
-            undefined,
+            typeof savedWorkspace === 'string' ? savedWorkspace : undefined,
             chatId
           );
         } else {

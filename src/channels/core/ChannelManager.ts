@@ -495,7 +495,8 @@ export class ChannelManager {
   async syncChannelSettings(
     platform: ChannelPlatform,
     agent: { backend: string; customAgentId?: string; name?: string },
-    model?: { id: string; useModel: string }
+    model?: { id: string; useModel: string },
+    workspace?: string
   ): Promise<{ success: boolean; error?: string }> {
     if (!this.initialized || !this.sessionManager) {
       return { success: false, error: 'Channel manager not initialized' };

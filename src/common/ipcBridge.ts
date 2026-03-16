@@ -979,6 +979,7 @@ export const channel = {
       platform: string;
       agent: { backend: string; customAgentId?: string; name?: string };
       model?: { id: string; useModel: string };
+      workspace?: string;
     }
   >('channel.sync-channel-settings'),
 

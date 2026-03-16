@@ -103,6 +103,8 @@ export interface IConfigStorageRefer {
     customAgentId?: string;
     name?: string;
   };
+  // Telegram assistant workspace / Telegram 助手工作区
+  'assistant.telegram.workspace'?: string;
   // Lark assistant default model / Lark 助手默认模型
   'assistant.lark.defaultModel'?: {
     id: string;
@@ -114,6 +116,8 @@ export interface IConfigStorageRefer {
     customAgentId?: string;
     name?: string;
   };
+  // Lark assistant workspace / Lark 助手工作区
+  'assistant.lark.workspace'?: string;
   // DingTalk assistant default model / DingTalk 助手默认模型
   'assistant.dingtalk.defaultModel'?: {
     id: string;
@@ -125,6 +129,8 @@ export interface IConfigStorageRefer {
     customAgentId?: string;
     name?: string;
   };
+  // DingTalk assistant workspace / DingTalk 助手工作区
+  'assistant.dingtalk.workspace'?: string;
   // Skills Market: whether the aionui-skills builtin skill is enabled
   'skillsMarket.enabled'?: boolean;
 }
