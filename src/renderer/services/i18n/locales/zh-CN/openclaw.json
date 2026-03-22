@@ -1,0 +1,12 @@
+{
+  "remote": {
+    "title": "连接远程 OpenClaw 网关",
+    "url": "网关地址",
+    "urlPlaceholder": "wss://your-server:18789",
+    "token": "认证令牌",
+    "tokenPlaceholder": "输入网关令牌（可选）",
+    "connect": "连接",
+    "buttonLabel": "OpenClaw 远程",
+    "urlRequired": "请输入网关地址"
+  }
+}

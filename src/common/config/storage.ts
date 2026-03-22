@@ -264,11 +264,12 @@ export type TChatConversation =
           customWorkspace?: boolean;
           /** Gateway configuration */
           gateway?: {
+            mode?: 'local' | 'remote';
             host?: string;
             port?: number;
+            url?: string;
             token?: string;
             password?: string;
-            useExternalGateway?: boolean;
             cliPath?: string;
           };
           /** Session key for resume */

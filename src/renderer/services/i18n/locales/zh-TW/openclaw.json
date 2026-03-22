@@ -1,0 +1,12 @@
+{
+  "remote": {
+    "title": "連接遠端 OpenClaw 閘道",
+    "url": "閘道地址",
+    "urlPlaceholder": "wss://your-server:18789",
+    "token": "認證令牌",
+    "tokenPlaceholder": "輸入閘道令牌（可選）",
+    "connect": "連接",
+    "buttonLabel": "OpenClaw 遠端",
+    "urlRequired": "請輸入閘道地址"
+  }
+}

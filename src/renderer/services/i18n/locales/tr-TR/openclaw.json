@@ -1,0 +1,12 @@
+{
+  "remote": {
+    "title": "Uzak OpenClaw Ağ Geçidine Bağlan",
+    "url": "Ağ Geçidi URL",
+    "urlPlaceholder": "wss://your-server:18789",
+    "token": "Kimlik Doğrulama Jetonu",
+    "tokenPlaceholder": "Ağ geçidi jetonunu girin (isteğe bağlı)",
+    "connect": "Bağlan",
+    "buttonLabel": "OpenClaw Uzak",
+    "urlRequired": "Ağ geçidi URL gerekli"
+  }
+}

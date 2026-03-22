@@ -481,6 +481,9 @@ export const codexConversation = {
 export const openclawConversation = {
   sendMessage: conversation.sendMessage,
   responseStream: bridge.buildEmitter<IResponseMessage>('openclaw.response.stream'),
+  getRemoteConfig: bridge.buildProvider<IBridgeResponse<{ url?: string; token?: string }>, void>(
+    'openclaw.get-remote-config'
+  ),
   getRuntime: bridge.buildProvider<
     IBridgeResponse<{
       conversationId: string;
@@ -767,6 +770,15 @@ export interface ICreateConversationParams {
     presetAssistantId?: string;
     /** Initial session mode selected on Guid page (from AgentModeSelector) */
     sessionMode?: string;
+    /** Gateway config overrides for OpenClaw */
+    gateway?: {
+      mode?: 'local' | 'remote';
+      host?: string;
+      port?: number;
+      url?: string;
+      token?: string;
+      password?: string;
+    };
     /** User-selected Codex model from Guid page */
     codexModel?: string;
     /** Pre-selected ACP model from Guid page (cached model list) */

@@ -26,13 +26,39 @@ interface OpenClawGatewayAuth {
   password?: string;
 }
 
-interface OpenClawGatewayConfig {
+interface OpenClawGatewayRemote {
+  url?: string;
+  token?: string;
+  password?: string;
+  tlsFingerprint?: string;
+  sshTarget?: string;
+  sshIdentity?: string;
+}
+
+interface OpenClawGatewaySection {
   port?: number;
+  mode?: 'local' | 'remote';
+  bind?: string;
   auth?: OpenClawGatewayAuth;
+  remote?: OpenClawGatewayRemote;
+  // Legacy fields (pre-mode era) for backward compatibility
+  host?: string;
+  url?: string;
 }
 
 interface OpenClawConfig {
-  gateway?: OpenClawGatewayConfig;
+  gateway?: OpenClawGatewaySection;
+}
+
+/**
+ * Resolved gateway config from the config file, normalized by mode.
+ */
+export interface ResolvedFileGatewayConfig {
+  mode: 'local' | 'remote';
+  url?: string;
+  token?: string;
+  password?: string;
+  port: number;
 }
 
 /**
@@ -130,33 +156,47 @@ export function readOpenClawConfig(): OpenClawConfig | null {
 }
 
 /**
- * Get gateway auth settings from config
+ * Resolve gateway config from the config file based on `gateway.mode`.
+ *
+ * - `gateway.mode` is the authoritative indicator; defaults to `'local'` when absent
+ * - `remote` mode reads url/token/password from `gateway.remote.*`, falls back to `gateway.url`
+ * - `local` mode reads auth from `gateway.auth.*`
+ */
+export function resolveGatewayConfigFromFile(): ResolvedFileGatewayConfig {
+  const config = readOpenClawConfig();
+  const gw = config?.gateway;
+  const defaultPort = 18789;
+
+  const port = typeof gw?.port === 'number' && Number.isFinite(gw.port) && gw.port > 0 ? gw.port : defaultPort;
+  const effectiveMode: 'local' | 'remote' = gw?.mode === 'remote' ? 'remote' : 'local';
+
+  if (effectiveMode === 'remote') {
+    const remote = gw?.remote;
+    return {
+      mode: 'remote',
+      url: remote?.url || gw?.url || undefined,
+      token: remote?.token || (gw?.auth?.mode === 'token' ? gw.auth.token : undefined),
+      password: remote?.password || (gw?.auth?.mode === 'password' ? gw.auth.password : undefined),
+      port,
+    };
+  }
+
+  // Local mode: auth from gateway.auth.*
+  const auth = gw?.auth;
+  return {
+    mode: 'local',
+    token: auth?.mode === 'token' ? auth.token : undefined,
+    password: auth?.mode === 'password' ? auth.password : undefined,
+    port,
+  };
+}
+
+/**
+ * Get gateway auth settings from config (local mode)
  */
 export function getGatewayAuthFromConfig(): OpenClawGatewayAuth | null {
   const config = readOpenClawConfig();
   return config?.gateway?.auth ?? null;
-}
-
-/**
- * Get gateway auth token from config
- */
-export function getGatewayAuthToken(): string | null {
-  const auth = getGatewayAuthFromConfig();
-  if (auth?.mode === 'token' && auth.token) {
-    return auth.token;
-  }
-  return null;
-}
-
-/**
- * Get gateway auth password from config
- */
-export function getGatewayAuthPassword(): string | null {
-  const auth = getGatewayAuthFromConfig();
-  if (auth?.mode === 'password' && auth.password) {
-    return auth.password;
-  }
-  return null;
 }
 
 /**
@@ -169,4 +209,12 @@ export function getGatewayPort(): number {
     return port;
   }
   return 18789; // Default port
+}
+
+/**
+ * Get gateway full URL from config (e.g., ws://192.168.1.100:18789 or wss://remote.example.com)
+ */
+export function getGatewayUrl(): string | null {
+  const config = readOpenClawConfig();
+  return config?.gateway?.url ?? null;
 }

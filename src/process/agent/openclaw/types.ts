@@ -263,6 +263,8 @@ export type GatewayClientName = GatewayClientId;
 // ========== Gateway Connection Config ==========
 
 export interface OpenClawGatewayConfig {
+  /** Gateway mode: 'local' spawns/connects locally, 'remote' connects to remote URL */
+  mode?: 'local' | 'remote';
   /** Gateway host (default: localhost) */
   host?: string;
   /** Gateway port (default: 18789) */
@@ -271,10 +273,10 @@ export interface OpenClawGatewayConfig {
   token?: string;
   /** Authentication password */
   password?: string;
-  /** Connect to external gateway instead of spawning */
-  useExternalGateway?: boolean;
   /** CLI path for spawning gateway (default: openclaw) */
   cliPath?: string;
+  /** Full WebSocket URL (e.g., wss://remote.example.com:18789). Overrides host/port. */
+  url?: string;
 }
 
 // ========== Gateway Client Options ==========
@@ -297,6 +299,7 @@ export interface OpenClawGatewayClientOptions {
   onHelloOk?: (hello: HelloOk) => void;
   onConnectError?: (err: Error) => void;
   onClose?: (code: number, reason: string) => void;
+  onPairingRequired?: (requestId: string | undefined) => void;
 }
 
 // ========== Gateway Close Code Hints ==========

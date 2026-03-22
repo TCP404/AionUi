@@ -17,6 +17,9 @@ import GuidModelSelector from './components/GuidModelSelector';
 import MentionDropdown, { MentionSelectorBadge } from './components/MentionDropdown';
 import QuickActionButtons from './components/QuickActionButtons';
 import SkillsMarketBanner from './components/SkillsMarketBanner';
+import OpenClawRemoteModal from '@/renderer/components/agent/OpenClawRemoteModal';
+import OpenClawLogo from '@/renderer/assets/logos/tools/openclaw.svg';
+import { LinkOne } from '@icon-park/react';
 import { useGuidAgentSelection } from './hooks/useGuidAgentSelection';
 import { useGuidInput } from './hooks/useGuidInput';
 import { useGuidMention } from './hooks/useGuidMention';
@@ -24,7 +27,7 @@ import { useGuidModelSelection } from './hooks/useGuidModelSelection';
 import { useGuidSend } from './hooks/useGuidSend';
 import { useTypewriterPlaceholder } from './hooks/useTypewriterPlaceholder';
 import { ConfigProvider } from '@arco-design/web-react';
-import React, { useCallback, useRef } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router-dom';
 import styles from './index.module.css';
@@ -37,6 +40,7 @@ const GuidPage: React.FC = () => {
   const { closeAllTabs, openTab } = useConversationTabs();
   const { activeBorderColor, inactiveBorderColor, activeShadow } = useInputFocusRing();
   const localeKey = resolveLocaleKey(i18n.language);
+  const [openClawRemoteVisible, setOpenClawRemoteVisible] = useState(false);
 
   // Open external link
   const openLink = useCallback(async (url: string) => {
@@ -314,6 +318,25 @@ const GuidPage: React.FC = () => {
               onSelectAgent={handleSelectAgentFromPillBar}
             />
           ) : null}
+
+          {/* OpenClaw Remote entry — always visible regardless of local CLI detection */}
+          <div className='flex justify-center mb-8px'>
+            <button
+              className='inline-flex items-center gap-6px px-12px py-6px rd-16px cursor-pointer border-none text-14px font-medium transition-opacity duration-200 hover:opacity-80'
+              style={{ backgroundColor: 'var(--fill-2)', color: 'var(--text-primary)' }}
+              onClick={() => setOpenClawRemoteVisible(true)}
+            >
+              <img src={OpenClawLogo} alt='OpenClaw' width={16} height={16} style={{ objectFit: 'contain' }} />
+              <LinkOne theme='outline' size={14} fill='currentColor' />
+              <span>{t('openclaw.remote.buttonLabel')}</span>
+            </button>
+          </div>
+          <OpenClawRemoteModal
+            visible={openClawRemoteVisible}
+            onClose={() => setOpenClawRemoteVisible(false)}
+            workspace={guidInput.dir || undefined}
+            customWorkspace={!!guidInput.dir}
+          />
 
           <GuidInputCard
             input={guidInput.input}

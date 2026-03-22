@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import { readOpenClawConfig } from '@process/agent/openclaw/openclawConfig';
 import { acpDetector } from '@process/agent/acp/AcpDetector';
 import { AcpConnection } from '@process/agent/acp/AcpConnection';
 import { buildAcpModelInfo, summarizeAcpModelInfo } from '@process/agent/acp/modelInfo';
@@ -335,6 +336,26 @@ export function initAcpConversationBridge(workerTaskManager: IWorkerTaskManager)
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : String(error);
       return { success: false, msg: errorMsg };
+    }
+  });
+
+  // Read OpenClaw remote gateway config from ~/.openclaw/openclaw.json
+  ipcBridge.openclawConversation.getRemoteConfig.provider(() => {
+    try {
+      const config = readOpenClawConfig();
+      const remote = config?.gateway?.remote;
+      return Promise.resolve({
+        success: true,
+        data: {
+          url: remote?.url || undefined,
+          token: remote?.token || undefined,
+        },
+      });
+    } catch (error) {
+      return Promise.resolve({
+        success: false,
+        msg: error instanceof Error ? error.message : 'Failed to read OpenClaw config',
+      });
     }
   });
 }

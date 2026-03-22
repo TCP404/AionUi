@@ -1,0 +1,12 @@
+{
+  "remote": {
+    "title": "リモート OpenClaw ゲートウェイに接続",
+    "url": "ゲートウェイ URL",
+    "urlPlaceholder": "wss://your-server:18789",
+    "token": "認証トークン",
+    "tokenPlaceholder": "ゲートウェイトークンを入力（任意）",
+    "connect": "接続",
+    "buttonLabel": "OpenClaw リモート",
+    "urlRequired": "ゲートウェイ URL を入力してください"
+  }
+}

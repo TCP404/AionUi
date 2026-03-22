@@ -1,0 +1,12 @@
+{
+  "remote": {
+    "title": "Connect to Remote OpenClaw Gateway",
+    "url": "Gateway URL",
+    "urlPlaceholder": "wss://your-server:18789",
+    "token": "Authentication Token",
+    "tokenPlaceholder": "Enter gateway token (optional)",
+    "connect": "Connect",
+    "buttonLabel": "OpenClaw Remote",
+    "urlRequired": "Gateway URL is required"
+  }
+}

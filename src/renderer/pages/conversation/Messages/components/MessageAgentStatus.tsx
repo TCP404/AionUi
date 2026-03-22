@@ -39,6 +39,8 @@ const MessageAgentStatus: React.FC<MessageAgentStatusProps> = ({ message }) => {
         return <Badge status='success' text={t('acp.status.authenticated', { agent: displayName })} />;
       case 'session_active':
         return <Badge status='success' text={t('acp.status.session_active', { agent: displayName })} />;
+      case 'pairing_required':
+        return <Badge status='warning' text={t('acp.status.pairing_required', { agent: displayName })} />;
       case 'disconnected':
         return <Badge status='default' text={t('acp.status.disconnected', { agent: displayName })} />;
       case 'error':
@@ -50,18 +52,28 @@ const MessageAgentStatus: React.FC<MessageAgentStatusProps> = ({ message }) => {
 
   const isError = status === 'error';
   const isSuccess = status === 'connected' || status === 'authenticated' || status === 'session_active';
+  const isWarning = status === 'pairing_required';
+
+  const resolveColor = (level: string) => {
+    if (isError) return `var(--color-danger-${level})`;
+    if (isWarning) return `var(--color-warning-${level})`;
+    if (isSuccess) return `var(--color-success-${level})`;
+    return `var(--color-primary-${level})`;
+  };
+  const resolveRgb = (level: string) => {
+    if (isError) return `rgb(var(--danger-${level}))`;
+    if (isWarning) return `rgb(var(--warning-${level}))`;
+    if (isSuccess) return `rgb(var(--success-${level}))`;
+    return `rgb(var(--primary-${level}))`;
+  };
 
   return (
     <div
       className='agent-status-message flex items-center gap-3 p-3 rounded-lg border'
       style={{
-        backgroundColor: isError
-          ? 'var(--color-danger-light-1)'
-          : isSuccess
-            ? 'var(--color-success-light-1)'
-            : 'var(--color-primary-light-1)',
-        borderColor: isError ? 'rgb(var(--danger-3))' : isSuccess ? 'rgb(var(--success-3))' : 'rgb(var(--primary-3))',
-        color: isError ? 'rgb(var(--danger-6))' : isSuccess ? 'rgb(var(--success-6))' : 'rgb(var(--primary-6))',
+        backgroundColor: resolveColor('light-1'),
+        borderColor: resolveRgb('3'),
+        color: resolveRgb('6'),
       }}
     >
       <div className='flex items-center gap-2'>
